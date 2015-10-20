@@ -19,6 +19,66 @@ class PhotoDetailViewController: UIViewController {
 
   // MARK: - Lifecycle
 
+  /* 
+    QUEUE TYPES
+    
+    *Main Queue*
+    Like any serial queue, tasks in this queue execute one at a time.
+    However, it's guaranteed that all tasks will execute on the main thread, which is 
+     the only thread allowed to update your UI.
+  
+    *System Concurrent Queues*
+    Linked with their own Quality of Service (QoS) class
+    Meant to express the intent of the submitted taks so that GCD can determine how to best prioritize
+  
+  
+    // NEW FOR IOS8: QoS Framework
+  
+  
+    QOS_CLASS_USER_INTERACTIVE: 
+    Represents tasks that need to be done immediately in order
+    to provide a nice user experience.
+    Use it for UI updates, event handling and small workloads that require low latency
+    Total amount of work done in this class during the execution of your app should be small
+  
+    QOS_CLASS_USER_INITIATED
+    represents tasks that are initiated from the UI and can be performed asynchronously
+    It should be used when the user is waiting for immedicate results and for 
+    tasks required to continue user interaction
+  
+    QOS_CLASS_UTILITY:
+    represents long running tasks, typically with a user-visible progress indicator
+    Use it for computations, I/O, networking, continuous data feeds and similar tasks
+    Designed to be energy efficient.
+  
+    QOS_CLASS_BACKGROUND
+    represents tasks that the user is not directly aware of.
+    Use it for prefetching, maintenance that don't require user interaction and aren't time sensitive.
+
+  */
+  
+  /*
+    HOW ND WHEN TO USE THE VARIOUS QUEUE TYPES WITH dispatch_async:
+    
+    *Custom Serial Queue*
+    Good choice when you want to perform background tasks serially and track it
+    Eliminates resource contention since you know only one task at a time is executing.
+    If you need the data from a method, you must inline another closure to retrieve it or use dispatch_sync
+  
+    *Main Queue (Serial)*
+    Common choice to update the UI after completing work in a task on a concurrent queue
+    You nest one closure inside another
+    If you're on the main queue and call dispatch_async on the main queue, you can guarantee
+     this new task will execute sometime after current method finishes
+  
+    *Concurrent Queue*
+    Common choice to perform non-UI work in background
+
+
+  */
+  
+  
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     assert(image != nil, "Image not set; required to use view controller")
@@ -30,8 +90,16 @@ class PhotoDetailViewController: UIViewController {
       photoImageView.contentMode = .Center
     }
 
-    let overlayImage = faceOverlayImageFromImage(image)
-    fadeInNewImage(overlayImage)
+    // move the work off the main thread and onto a global queue
+    // closure submitted asynchronously, calling thread continues-makes loading feel more snappy
+    dispatch_async(GlobalMainQueue) {
+      let overlayImage = self.faceOverlayImageFromImage(self.image)
+      // add closure to main queue to fade in googly eyes
+      dispatch_async(dispatch_get_main_queue()) {
+        self.fadeInNewImage(overlayImage)
+      }
+
+    }
   }
 }
 

@@ -12,20 +12,24 @@
 	<dict>
 		<key>5A65448EA4C94EFCFA696C224DAAF2C0072E2BB1</key>
 		<string>bitbucket.org:bjorn/googlypuff.git</string>
+		<key>EDC8FF08B3539297A8C0C9A975931D273CB35AD5</key>
+		<string>https://github.com/t-pryor/GooglyPuffSwift.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>GooglyPuff.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>5A65448EA4C94EFCFA696C224DAAF2C0072E2BB1</key>
+		<string>../../../GooglyPuff</string>
+		<key>EDC8FF08B3539297A8C0C9A975931D273CB35AD5</key>
 		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>bitbucket.org:bjorn/googlypuff.git</string>
+	<string>https://github.com/t-pryor/GooglyPuffSwift.git</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>5A65448EA4C94EFCFA696C224DAAF2C0072E2BB1</string>
+	<string>EDC8FF08B3539297A8C0C9A975931D273CB35AD5</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
@@ -35,6 +39,14 @@
 			<string>5A65448EA4C94EFCFA696C224DAAF2C0072E2BB1</string>
 			<key>IDESourceControlWCCName</key>
 			<string>GooglyPuff</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>EDC8FF08B3539297A8C0C9A975931D273CB35AD5</string>
+			<key>IDESourceControlWCCName</key>
+			<string>GooglyPuffSwift</string>
 		</dict>
 	</array>
 </dict>

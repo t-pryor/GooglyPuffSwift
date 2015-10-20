@@ -13,6 +13,26 @@ let OverlyAttachedGirlfriendURLString = "http://i.imgur.com/UvqEgCv.png"
 let SuccessKidURLString = "http://i.imgur.com/dZ5wRtb.png"
 let LotsOfFacesURLString = "http://i.imgur.com/tPzTg7A.jpg"
 
+// QOS class parameter for dispatch_get_global_queue: cumborsome to write
+// qos_class_t is defined as a struct with a value property of type UInt32 which must be typecast to Int
+// Helper variables below:
+
+var GlobalMainQueue: dispatch_queue_t {
+  return dispatch_get_main_queue()
+}
+
+var GlobalUserInteractiveQueue: dispatch_queue_t {
+  return dispatch_get_global_queue(Int(QOS_CLASS_USER_INTERACTIVE.value), 0)
+}
+
+var GlobalUtilityQueue: dispatch_queue_t {
+  return dispatch_get_global_queue(Int(QOS_CLASS_UTILITY.value), 0)
+}
+
+var GlobalBackgroundQueue: dispatch_queue_t {
+  return dispatch_get_global_queue(Int(QOS_CLASS_BACKGROUND.value), 0)
+}
+
 @objc class Utils {
   class var defaultBackgroundColor: UIColor {
     return UIColor(red: 236.0/255.0, green: 254.0/255.0, blue: 255.0/255.0, alpha: 1.0)
@@ -22,3 +42,5 @@ let LotsOfFacesURLString = "http://i.imgur.com/tPzTg7A.jpg"
     return UIDevice.currentDevice().userInterfaceIdiom == UIUserInterfaceIdiom.Pad
   }
 }
+
+
