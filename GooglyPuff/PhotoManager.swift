@@ -23,18 +23,38 @@ class PhotoManager {
     return _sharedManager
   }
 
+  
+  // create read-only stored property
+  // https://books.google.com/books?id=Dq3TBQAAQBAJ&pg=PT200&lpg=PT200&dq=private+var+underscore+swift&source=bl&ots=XLknAbsDCv&sig=1BFc4NVNyUgbXdChpMYlexvn0Q0&hl=en&sa=X&ved=0CFIQ6AEwCGoVChMIu8z6oJbWyAIVDBo-Ch3VzA27#v=onepage&q=private%20var%20underscore%20swift&f=false
+  
   private var _photos: [Photo] = []
+  
   var photos: [Photo] {
-    // FIXME: Not thread-safe
-    return _photos
+    
+    var photosCopy: [Photo]!
+  
+    dispatch_sync(concurrentPhotoQueue) {
+        photosCopy = self._photos
+    }
+    
+     return photosCopy
+  
   }
 
+  
+  private let concurrentPhotoQueue = dispatch_queue_create("com.raywenderlich.GooglyPuff.photoQueue", DISPATCH_QUEUE_CONCURRENT)
+
   func addPhoto(photo: Photo) {
-    // FIXME: Not thread-safe
-    _photos.append(photo)
-    dispatch_async(dispatch_get_main_queue()) {
-      self.postContentAddedNotification()
+    
+    dispatch_barrier_async(concurrentPhotoQueue) {
+      self._photos.append(photo)
+      dispatch_async(GlobalMainQueue) {
+        self.postContentAddedNotification()
+        
+      }
+    
     }
+
   }
 
   func downloadPhotosWithCompletion(completion: BatchPhotoDownloadingCompletionClosure?) {
