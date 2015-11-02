@@ -57,45 +57,40 @@ class PhotoManager {
   }
 
   
-  
-    func downloadPhotosWithCompletion(completion: BatchPhotoDownloadingCompletionClosure?) {
-      
-        dispatch_async(GlobalUserInitiatedQueue) {
+  func downloadPhotosWithCompletion(completion: BatchPhotoDownloadingCompletionClosure?) {
+    
+      var storedError: NSError!
+      var downloadGroup = dispatch_group_create()
+      let addresses = [OverlyAttachedGirlfriendURLString,
+                       SuccessKidURLString,
+                       LotsOfFacesURLString]
+ 
+    
+    
+      //number of iterations, queue to perform the task, and closure in third parameter
+      dispatch_apply(addresses.count, GlobalUserInitiatedQueue, { i in
+
+          let index = Int(i)
+          let address = addresses[index]
+          let url = NSURL(string: address)
         
-            var storedError: NSError!
-            var downloadGroup = dispatch_group_create()
-        
-            for address in [OverlyAttachedGirlfriendURLString, SuccessKidURLString, LotsOfFacesURLString] {
-                let url = NSURL(string: address)
-                dispatch_group_enter(downloadGroup)
-              
-              // DownloadPhoto(url:, completion) is asynchronous and returns immediately
-              // replaced trailing syntax here from example code, more clear
-              let photo = DownloadPhoto(url: url!, completion: {(image, error) in
-                    if error != nil {
-                        storedError = error
-                    }
-                    dispatch_group_leave(downloadGroup)
-              })
-          
-                PhotoManager.sharedManager.addPhoto(photo)
-            }
-            // blocks your current thread and waits until either all the
-            // tasks in the group have completed or a timeout occurs
-            // this will wait until either all tasks are complete or 
-            // until the time expires
-            // if the time expires before all events complete,
-            // the function will return a non-zero result
-            dispatch_group_wait(downloadGroup, DISPATCH_TIME_FOREVER)
-        
-          
-            dispatch_async(GlobalMainQueue) {
-                if let completion = completion {
-                    completion(error: storedError)
-                }
-            }
+          dispatch_group_enter(downloadGroup)
+          let photo = DownloadPhoto(url: url!) { image, error in
+              if let error = error {
+                  storedError = error
+              }
+          dispatch_group_leave(downloadGroup)
         }
-    }
+        PhotoManager.sharedManager.addPhoto(photo)
+      })
+      
+      dispatch_group_notify(downloadGroup, GlobalMainQueue, {
+          if let completion = completion {
+              completion(error: storedError)
+          }
+      })
+  }
+  
   
   private func postContentAddedNotification() {
     NSNotificationCenter.defaultCenter().postNotificationName(PhotoManagerAddedContentNotification, object: nil)
