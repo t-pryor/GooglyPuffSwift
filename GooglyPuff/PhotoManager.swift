@@ -61,35 +61,71 @@ class PhotoManager {
     
       var storedError: NSError!
       var downloadGroup = dispatch_group_create()
-      let addresses = [OverlyAttachedGirlfriendURLString,
+      var addresses = [OverlyAttachedGirlfriendURLString,
                        SuccessKidURLString,
                        LotsOfFacesURLString]
  
     
+      // addresses array is expanded to hold three of each address
+      addresses += addresses + addresses
     
-      //number of iterations, queue to perform the task, and closure in third parameter
-      dispatch_apply(addresses.count, GlobalUserInitiatedQueue, { i in
-
-          let index = Int(i)
-          let address = addresses[index]
-          let url = NSURL(string: address)
-        
-          dispatch_group_enter(downloadGroup)
-          let photo = DownloadPhoto(url: url!) { image, error in
-              if let error = error {
-                  storedError = error
-              }
-          dispatch_group_leave(downloadGroup)
-        }
-        PhotoManager.sharedManager.addPhoto(photo)
-      })
+      // will hold the created blocks for later use
+      var blocks: [dispatch_block_t] = []
+    
+      /*
+        CANCELLING DISPATCH BLOCKS-new for iOS8
       
-      dispatch_group_notify(downloadGroup, GlobalMainQueue, {
-          if let completion = completion {
-              completion(error: storedError)
-          }
-      })
-  }
+        Dispatch block objects
+        -can set a Quality of Service class per object for internal prioritization in a queue
+        -can cancel the execution of block objects
+          -a block object can only be cancelled before it reaches the head of a queue and starts executing
+      */
+    
+      for i in 0 ..< addresses.count {
+          dispatch_group_enter(downloadGroup)
+          // creates a new block object
+          // first parameter is a flag defining various block traits
+          // flag used here makes the block inherit its QoS class from the queue it is dispatched to
+        
+          let block = dispatch_block_create(DISPATCH_BLOCK_INHERIT_QOS_CLASS) {
+              let index = Int(i)
+              let address = addresses[index]
+              let url = NSURL(string: address)
+              let photo = DownloadPhoto(url: url!) {
+                  image, error in
+                if let error = error {
+                    storedError = error
+                }
+                dispatch_group_leave(downloadGroup)
+              }
+              PhotoManager.sharedManager.addPhoto(photo)
+        }
+        blocks.append(block)
+        // block is dispatched asynchronously to the global main queue
+        // code that sets up the dispatch block is already executing on the main queue so you are guaranteed the 
+        //  download blocks will execute at some later time
+        dispatch_async(GlobalMainQueue, block)
+      }
+    
+    // first three downloads left alone
+    for block in blocks[3 ..< blocks.count] {
+        let cancel = arc4random_uniform(2) // 0 or 1, like a coin toss
+        // if the random num = 1, block is cancelled, IF the block is still in a queue and has not begun executing.
+        // blocks cannot be cancelled in the middle of execution
+        if cancel == 1 {
+            dispatch_block_cancel(block)
+            // since all blocks are added to the dispatch group, remember to remove the cancelled ones
+            dispatch_group_leave(downloadGroup)
+        }
+    }
+    
+    dispatch_group_notify(downloadGroup, GlobalMainQueue) {
+      if let completion = completion {
+          completion(error: storedError)
+      }
+    }
+    
+}
   
   
   private func postContentAddedNotification() {
